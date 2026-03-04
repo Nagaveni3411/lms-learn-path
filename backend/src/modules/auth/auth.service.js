@@ -38,7 +38,19 @@ async function register(payload) {
 async function login({ email, password }) {
   const user = await userModel.findByEmail(email);
   if (!user) throw createError(401, "Invalid credentials");
-  const valid = await comparePassword(password, user.password_hash);
+
+  let valid = false;
+  if (user.password_hash) {
+    valid = await comparePassword(password, user.password_hash);
+  } else if (user.password) {
+    // Legacy account compatibility: migrate plain-text password users to hashed passwords on successful login.
+    valid = String(password) === String(user.password);
+    if (valid) {
+      const newHash = await hashPassword(password);
+      await userModel.updatePasswordHash(user.id, newHash);
+    }
+  }
+
   if (!valid) throw createError(401, "Invalid credentials");
   const tokens = await issueTokens(user);
   return { user: { id: user.id, email: user.email, name: user.name }, ...tokens };
@@ -71,4 +83,3 @@ async function logout(refreshToken) {
 }
 
 module.exports = { register, login, refresh, logout };
-

@@ -13,5 +13,8 @@ async function createUser({ email, password_hash, name }) {
   return findById(id);
 }
 
-module.exports = { findByEmail, findById, createUser };
+function updatePasswordHash(id, password_hash) {
+  return db("users").where({ id }).update({ password_hash, updated_at: new Date() });
+}
 
+module.exports = { findByEmail, findById, createUser, updatePasswordHash };
