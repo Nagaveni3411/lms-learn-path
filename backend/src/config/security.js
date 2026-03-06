@@ -19,9 +19,22 @@ function buildAllowedOrigins() {
 
 const allowedOrigins = buildAllowedOrigins();
 
+function matchWildcardOrigin(origin) {
+  return allowedOrigins.some((entry) => {
+    if (!entry.includes("*")) return false;
+    if (entry === "*") return true;
+    const pattern = `^${entry
+      .replace(/[.+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\\\*/g, ".*")}$`;
+    return new RegExp(pattern).test(origin);
+  });
+}
+
 function isAllowedOrigin(origin) {
   if (!origin) return true; // non-browser clients
+  if (allowedOrigins.length === 0) return true; // fail-safe when no explicit allow-list is configured
   if (allowedOrigins.includes(origin)) return true;
+  if (matchWildcardOrigin(origin)) return true;
   if (env.allowVercelOrigins && vercelRegex.test(origin)) return true;
   if (!isProduction && /^https?:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) return true;
   return false;
