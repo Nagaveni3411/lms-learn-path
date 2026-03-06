@@ -3,6 +3,7 @@ require("dotenv").config();
 const env = {
   port: Number(process.env.PORT || 5000),
   db: {
+    url: process.env.DATABASE_URL || "",
     host: process.env.DB_HOST,
     port: Number(process.env.DB_PORT || 3306),
     name: process.env.DB_NAME,
